@@ -8,7 +8,7 @@ Description: Provide function to send the message to rabbitmq exchange.
 import pika
 
 class RabbitMQProducer():
-    def __init__(self, host, port, virtual_host, username, password, exchange) -> None:
+    def __init__(self, host, port, virtual_host, username, password, exchange, exchane_type='topic') -> None:
         """Constructor."""
         self.host = host
         self.port = port
@@ -16,6 +16,7 @@ class RabbitMQProducer():
         self.username = username
         self.password = password
         self.exchange = exchange
+        self.exchange_type = exchane_type
         
         # STATE VARIABLES
         self.channel = None
@@ -34,6 +35,9 @@ class RabbitMQProducer():
                 )
             self.connection = pika.BlockingConnection(connection_params)
             self.channel = self.connection.channel()
+            
+            # DECLARE EXCHANGE
+            self.channel.exchange_declare(exchange=self.exchange, exchange_type=self.exchange_type, durable=True)
             
             # Turn on delivery confirmations
             self.channel.confirm_delivery()
