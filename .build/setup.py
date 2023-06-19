@@ -1,6 +1,8 @@
 from setuptools import setup, find_namespace_packages
 from pathlib import Path
 
+from rabbitmq_utils import __version__
+
 # README FILE CONTENT
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
@@ -16,17 +18,17 @@ def get_packages_list():
         package_list.append(package)
     return package_list
 
-def get_version():
-    """Getting version of the package."""
-    version_file = this_directory / 'rabbitmq_utils' / 'version.py'
-    with open(version_file, "rb") as source_file:
-        code = compile(source_file.read(), version_file, "exec")
-    exec(code)
-    return locals().get('__version__')
+# def get_version():
+#     """Getting version of the package."""
+#     version_file = this_directory / 'rabbitmq_utils' / 'version.py'
+#     with open(version_file, "rb") as source_file:
+#         code = compile(source_file.read(), version_file, "exec")
+#     exec(code)
+#     return locals().get('__version__')
 
 setup(
     name='rabbitmq-utils',
-    version=get_version(),
+    version=__version__,
     description='Provide easy connection to rabbitmq server.',
 
     long_description=long_description,

@@ -1,2 +1,1 @@
-import rabbitmq_utils.version
-__version__ = rabbitmq_utils.version.__version__
+__version__='1.0.1'
