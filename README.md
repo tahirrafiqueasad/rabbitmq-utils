@@ -7,6 +7,8 @@ Following sample code will allow you to send the message to desire queue.
 
 In **RabbitMQProducer** class **Publisher Confirms** is implemented, So it will tell you weather the message is send to desire location or not.
 
+**Note: In order to use default exchange, use '' as exchange name. When using the default exchange then routing key will be the name of queue.**
+
 ```python
 from rabbitmq_utils.producer import RabbitMQProducer
 import json
@@ -22,7 +24,7 @@ rmqp = RabbitMQProducer(
 )
 is_sent = rmqp.sendMessage(
     message,
-    routing_key
+    routing_key='test_key'
 )
 
 # RESULT
@@ -60,8 +62,9 @@ from rabbitmq_utils.consumer import RabbitMQConsumer
 # STARTING RABBITMQ CONSUMER
 rmqc = RabbitMQConsumer(
         host='localhost', port=5672, virtual_host='/', 
-        username='guest', password='guest', exchange='test_exc', 
-        queue_name='test_que', routing_key='test_key', exchane_type='topic',
+        username='guest', password='guest', 
+        queue_name='test_que', routing_key='test_key',
+    	exchange='test_exc', exchane_type='topic',
     	my_callback_function
 )
 rmqc.receiveMessage()
@@ -70,3 +73,11 @@ rmqc.receiveMessage()
 ## Author
 
 **Tahir Rafique**
+
+## Releases
+
+| Date      | Version | Summary                              |
+| --------- | ------- | ------------------------------------ |
+| 27-Apr-23 | v1.0.1  | Improving default callback function. |
+| 27-Apr-23 | v1.0.0  | Initial build                        |
+

@@ -8,7 +8,7 @@ Description: Provide function to send the message to rabbitmq exchange.
 import pika
 
 class RabbitMQProducer():
-    def __init__(self, host, port, virtual_host, username, password, exchange, exchange_type='topic') -> None:
+    def __init__(self, host, port, virtual_host, username, password, exchange='', exchange_type='topic') -> None:
         """Constructor."""
         self.host = host
         self.port = port
@@ -21,6 +21,16 @@ class RabbitMQProducer():
         # STATE VARIABLES
         self.channel = None
         self.connection = None
+        self._isSent = None
+        return None
+    
+    def isSent(self):
+        """Getting send status."""
+        return self._isSent
+    
+    def setSentStatus(self, status):
+        """Setting send status."""
+        self._isSent = status
         return None
     
     def getChannel(self):
@@ -37,7 +47,8 @@ class RabbitMQProducer():
             self.channel = self.connection.channel()
             
             # DECLARE EXCHANGE
-            self.channel.exchange_declare(exchange=self.exchange, exchange_type=self.exchange_type, durable=True)
+            if self.exchange != '':
+                self.channel.exchange_declare(exchange=self.exchange, exchange_type=self.exchange_type, durable=True)
             
             # Turn on delivery confirmations
             self.channel.confirm_delivery()
@@ -48,7 +59,7 @@ class RabbitMQProducer():
         self.connection.close()
         return None
     
-    def sendMessage(self, message, routing_key):
+    def sendMessage(self, message, routing_key, **kwargs):
         """Send the message to rabbitmq."""
         # GETTING CHANNEL
         channel = self.getChannel()
@@ -63,12 +74,16 @@ class RabbitMQProducer():
                 mandatory=True,
                 properties=pika.BasicProperties(
                     content_type='text/plain',
-                    delivery_mode=pika.DeliveryMode.Transient
+                    delivery_mode=pika.DeliveryMode.Transient,
+                    **kwargs
                 )
             )
             is_sent = True
         except pika.exceptions.UnroutableError:
             is_sent = False
+            
+        # UDATING STATUS
+        self.setSentStatus(is_sent)
         
         # CLOSING CONNECTION
         self.closeConnection()
@@ -78,12 +93,12 @@ class RabbitMQProducer():
 if __name__ == "__main__":
     # INFORMATION
     host = 'localhost'
-    port = 5672
+    port = 9020
     virtual_host = '/'
     username = 'guest'
     password = 'guest'
-    exchange = ''
-    routing_key = 'test'
+    exchange = 'test_exc'
+    routing_key = 'test_key'
     
     # DEFINING MESSAGE
     import json

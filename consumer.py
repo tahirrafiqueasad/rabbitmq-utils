@@ -24,7 +24,7 @@ def callback_test(ch, method, properties, body):
 
 
 class RabbitMQConsumer():
-    def __init__(self, host, port, virtual_host, username, password, exchange, queue_name, routing_key, exchange_type='topic', callback_fun=callback_test) -> None:
+    def __init__(self, host, port, virtual_host, username, password, queue_name, routing_key, exchange='', exchange_type='topic', callback_fun=callback_test) -> None:
         """Constructor."""
         self.host = host
         self.port = port
@@ -57,10 +57,11 @@ class RabbitMQConsumer():
         self.channel.queue_declare(queue=self.queue_name, durable=True, exclusive=False, auto_delete=False)
         
         # DECLARE EXCHANGE
-        self.channel.exchange_declare(exchange=self.exchange, exchange_type=self.exchange_type, durable=True)
+        if self.exchange != '': # No delecration and binding is required for default exchange.
+            self.channel.exchange_declare(exchange=self.exchange, exchange_type=self.exchange_type, durable=True)
         
-        # BINDING QUEUE
-        self.channel.queue_bind(exchange=self.exchange, queue=self.queue_name, routing_key=self.routing_key)
+            # BINDING QUEUE
+            self.channel.queue_bind(exchange=self.exchange, queue=self.queue_name, routing_key=self.routing_key)
         return None
     
     def startReveiving(self):
@@ -78,3 +79,18 @@ class RabbitMQConsumer():
         # STARTING CINSUMPTION
         self.startReveiving()
         return None
+
+if __name__ == "__main__":
+    # INFORMATION
+    host = 'localhost'
+    port = 9020
+    virtual_host = '/'
+    username = 'guest'
+    password = 'guest'
+    exchange = 'test_exc'
+    routing_key = 'test_key'
+    queue_name = 'test_que'
+    
+    # SENDING
+    consumer = RabbitMQConsumer(host, port, virtual_host, username, password, queue_name, routing_key, exchange)
+    consumer.receiveMessage()
