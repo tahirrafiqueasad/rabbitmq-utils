@@ -7,7 +7,7 @@
 
     # COPYING DATA
     mkdir rabbitmq_utils
-    cp ../__init__.py ../consumer.py ../producer.py ../requirements.txt ./rabbitmq_utils
+    cp -r ../__init__.py ../consumer.py ../producer.py ../requirements.txt ../rpc ./rabbitmq_utils
     cp ../README.md ./
 
     # BUILDING
