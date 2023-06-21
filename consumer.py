@@ -10,12 +10,20 @@ import pika
 import time
 
 def callback_test(ch, method, properties, body):
+    # GETTING MESSAGE
+    message = body.decode()
     print('==================================')
-    print(f'INFO: Received Message: \n\n{body.decode()}\n')
-    wait_sec = body.count(b'.')
+    print(f'INFO: Received Message: \n\n{message}\n')
+    
+    # PERFORM YOUR LOGIC HERE
+    import json
+    wait_sec = json.loads(message)['wait_time']
     print(f'INFO: Wating for {wait_sec} seconds.')
     time.sleep(wait_sec)
     print('INFO: Done waiting.')
+    
+    
+    # ACKNOWLEDGE WORK IS DONE
     ch.basic_ack(delivery_tag=method.delivery_tag)
     print("INFO: Acknowledgment Done.")
     print('==================================')
@@ -91,6 +99,6 @@ if __name__ == "__main__":
     routing_key = 'test_key'
     queue_name = 'test_que'
     
-    # SENDING
+    # RECEIVING
     consumer = RabbitMQConsumer(host, port, virtual_host, username, password, queue_name, routing_key, exchange)
     consumer.receiveMessage()

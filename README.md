@@ -10,7 +10,7 @@ In **RabbitMQProducer** class **Publisher Confirms** is implemented, So it will 
 **Note: In order to use default exchange, use '' as exchange name. When using the default exchange then routing key will be the name of queue.**
 
 ```python
-from rabbitmq_utils.producer import RabbitMQProducer
+from rabbitmq_utils import RabbitMQProducer
 import json
 
 # DEFINING MESSAGE
@@ -48,6 +48,7 @@ def my_callback_function(ch, method, properties, body):
     message = body.decode()
     
     # PERFORM YOUR LOGIC HERE
+    myLogic()
     
     # ACKNOWLEDGE WORK IS DONE
     ch.basic_ack(delivery_tag=method.delivery_tag)
@@ -57,7 +58,7 @@ def my_callback_function(ch, method, properties, body):
 Following sample code will allow you to receive message from rabbitmq server.
 
 ```python
-from rabbitmq_utils.consumer import RabbitMQConsumer
+from rabbitmq_utils import RabbitMQConsumer
 
 # STARTING RABBITMQ CONSUMER
 rmqc = RabbitMQConsumer(
@@ -70,6 +71,109 @@ rmqc = RabbitMQConsumer(
 rmqc.receiveMessage()
 ```
 
+## Remote Procedure Call (RPC)
+
+RPC allow to run a function on a remote computer and wait for the result. It is a synchronous call. This package provide simplest implementation of RPC.
+
+RPC consist of two parts. One is the **server** that will process the request and other is **client** that will generate the request to server. Following are example of RPC implementation.
+
+### Server
+
+```python
+from rabbitmq_utils.rpc import RPCServer
+
+# STARTING RPC SERVER
+server = RabbitMQConsumer(
+        host='localhost', port=5672, virtual_host='/', 
+        username='guest', password='guest', 
+        queue_name='test_que', routing_key='test_key',
+    	exchange='test_exc', exchane_type='topic',
+    	rpc_callback_function
+)
+server.receiveMessage()
+```
+
+Callback function of RPC is different from consumer callback function. In this callback we will return the result back to client.
+
+Note: **result** must be string. If it is not then use **json.dumps(**result**)** to convert it to string.
+
+```python
+def rpc_callback_function(ch, method, properties, body):
+    # GETTING MESSAGE
+    message = body.decode()
+    
+    # PERFORM YOUR LOGIC HERE
+    result = myLogic()
+    
+    # RETURING RESPONSE
+    ch.basic_publish(
+        exchange='', routing_key=properties.reply_to,
+        properties=pika.BasicProperties(
+            correlation_id = properties.correlation_id
+        ),
+        body=result
+    )
+    
+    # ACKNOWLEDGE WORK IS DONE
+    ch.basic_ack(delivery_tag=method.delivery_tag)
+    return None
+```
+
+### Client
+
+```python
+from rabbitmq_utils.rpc import RPCClient
+import json
+
+# DEFINING MESSAGE
+message = json.dumps({'hello': 'world'})
+
+# SENDING
+client = RPCClient(
+    host='localhost', port=5672, virtual_host='/', 
+    username='guest', password='guest', 
+    exchange='test_exc', exchane_type='topic',
+    timeout=3 # wait 3 seconds for response. default is None (infinite wait).
+)
+is_sent, response = client.sendMessage(
+    message,
+    routing_key='test_key',
+    return_response=True
+)
+
+# OUTPUT
+print(f'is_sent: {is_sent} \t code: {client.getCode()} \t response: {response}')
+```
+
+Client **sendMessage** receive **return_response** argument (default=False). If this is **True** then client will wait for response for desire **timeout** period.  You can receive response later if you want by using follow sample code:
+
+```python
+# SEND REQUEST
+is_sent = client.sendMessage(
+    message,
+    routing_key
+)
+
+# PERFORM YOUR LOGIC
+
+# RECEIVE RESPONSE
+response = client.receiveResponse()
+```
+
+Always check the validity of response using status code. Following code will help you check it:
+
+```python
+status_code = client.getCode()
+print(status_code)
+```
+
+Code is **integer**. Following table shows the meanings:
+
+| Code | Meaning                            |
+| ---- | ---------------------------------- |
+| 200  | Response is successfully obtained. |
+| 408  | Timeout occur.                     |
+
 ## Author
 
 **Tahir Rafique**
@@ -78,6 +182,7 @@ rmqc.receiveMessage()
 
 | Date      | Version | Summary                              |
 | --------- | ------- | ------------------------------------ |
+| 21-Jun-23 | v1.2.0  | Adding RPC to module.                |
 | 27-Apr-23 | v1.0.1  | Improving default callback function. |
 | 27-Apr-23 | v1.0.0  | Initial build                        |
 

@@ -59,7 +59,7 @@ class RabbitMQProducer():
         self.connection.close()
         return None
     
-    def sendMessage(self, message, routing_key, **kwargs):
+    def sendMessage(self, message, routing_key, close_connection=True, **kwargs):
         """Send the message to rabbitmq."""
         # GETTING CHANNEL
         channel = self.getChannel()
@@ -86,7 +86,8 @@ class RabbitMQProducer():
         self.setSentStatus(is_sent)
         
         # CLOSING CONNECTION
-        self.closeConnection()
+        if close_connection:
+            self.closeConnection()
         return is_sent
 
 
@@ -102,7 +103,7 @@ if __name__ == "__main__":
     
     # DEFINING MESSAGE
     import json
-    message = json.dumps({'hello': 'world'})
+    message = json.dumps({'wait_time': 2})
     
     # SENDING
     producer = RabbitMQProducer(host, port, virtual_host, username, password, exchange)
