@@ -20,7 +20,7 @@ message = json.dumps({'hello': 'world'})
 rmqp = RabbitMQProducer(
     host='localhost', port=5672, virtual_host='/', 
     username='guest', password='guest', 
-    exchange='test_exc', exchane_type='topic'
+    exchange='test_exc', exchange_type='topic'
 )
 is_sent = rmqp.sendMessage(
     message,
@@ -65,7 +65,7 @@ rmqc = RabbitMQConsumer(
         host='localhost', port=5672, virtual_host='/', 
         username='guest', password='guest', 
         queue_name='test_que', routing_key='test_key',
-    	exchange='test_exc', exchane_type='topic',
+    	exchange='test_exc', exchange_type='topic',
     	my_callback_function
 )
 rmqc.receiveMessage()
@@ -83,12 +83,12 @@ RPC consist of two parts. One is the **server** that will process the request an
 from rabbitmq_utils.rpc import RPCServer
 
 # STARTING RPC SERVER
-server = RabbitMQConsumer(
+server = RPCServer(
         host='localhost', port=5672, virtual_host='/', 
         username='guest', password='guest', 
         queue_name='test_que', routing_key='test_key',
-    	exchange='test_exc', exchane_type='topic',
-    	rpc_callback_function
+    	exchange='test_exc', exchange_type='topic',
+    	callback_fun=rpc_callback_function
 )
 server.receiveMessage()
 ```
@@ -132,7 +132,7 @@ message = json.dumps({'hello': 'world'})
 client = RPCClient(
     host='localhost', port=5672, virtual_host='/', 
     username='guest', password='guest', 
-    exchange='test_exc', exchane_type='topic',
+    exchange='test_exc', exchange_type='topic',
     timeout=3 # wait 3 seconds for response. default is None (infinite wait).
 )
 is_sent, response = client.sendMessage(
@@ -182,6 +182,7 @@ Code is **integer**. Following table shows the meanings:
 
 | Date      | Version | Summary                              |
 | --------- | ------- | ------------------------------------ |
+| 14-Jul-23 | v1.2.1  | Correcting documentation.            |
 | 21-Jun-23 | v1.2.0  | Adding RPC to module.                |
 | 27-Apr-23 | v1.0.1  | Improving default callback function. |
 | 27-Apr-23 | v1.0.0  | Initial build                        |
