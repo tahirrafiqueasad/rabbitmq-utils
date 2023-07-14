@@ -8,7 +8,7 @@ Description: Provide function to send the message to rabbitmq exchange.
 import pika
 
 class RabbitMQProducer():
-    def __init__(self, host, port, virtual_host, username, password, exchange='', exchange_type='topic') -> None:
+    def __init__(self, host, port, virtual_host, username, password, exchange='', exchange_type='topic', persistent_message=False) -> None:
         """Constructor."""
         self.host = host
         self.port = port
@@ -22,6 +22,12 @@ class RabbitMQProducer():
         self.channel = None
         self.connection = None
         self._isSent = None
+        
+        # DELIVERTY MODE
+        if persistent_message:
+            self._delivery_mode = pika.DeliveryMode.Persistent
+        else:
+            self._delivery_mode = pika.DeliveryMode.Transient
         return None
     
     def isSent(self):
@@ -74,7 +80,7 @@ class RabbitMQProducer():
                 mandatory=True,
                 properties=pika.BasicProperties(
                     content_type='text/plain',
-                    delivery_mode=pika.DeliveryMode.Transient,
+                    delivery_mode=self._delivery_mode,
                     **kwargs
                 )
             )

@@ -12,8 +12,8 @@ from rabbitmq_utils import RabbitMQProducer
 
 class RPCClient(RabbitMQProducer):
     """RPC Client Class."""
-    def __init__(self, host, port, virtual_host, username, password, exchange, exchange_type='topic', timeout=None) -> None:
-        super().__init__(host, port, virtual_host, username, password, exchange, exchange_type)
+    def __init__(self, host, port, virtual_host, username, password, exchange, exchange_type='topic', timeout=None, persistent_message=False) -> None:
+        super().__init__(host, port, virtual_host, username, password, exchange, exchange_type, persistent_message)
         
         self.timeout = timeout
         

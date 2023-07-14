@@ -7,7 +7,9 @@ Following sample code will allow you to send the message to desire queue.
 
 In **RabbitMQProducer** class **Publisher Confirms** is implemented, So it will tell you weather the message is send to desire location or not.
 
-**Note: In order to use default exchange, use '' as exchange name. When using the default exchange then routing key will be the name of queue.**
+**Note: In order to use default exchange, use "" as exchange name. When using the default exchange then routing key will be the name of queue.**
+
+In order to make message persistent use **persistent_message=True**. This will increase the disk size as well as latency. The message will be recovered even after the rabbitmq server is restarted. 
 
 ```python
 from rabbitmq_utils import RabbitMQProducer
@@ -20,7 +22,8 @@ message = json.dumps({'hello': 'world'})
 rmqp = RabbitMQProducer(
     host='localhost', port=5672, virtual_host='/', 
     username='guest', password='guest', 
-    exchange='test_exc', exchange_type='topic'
+    exchange='test_exc', exchange_type='topic',
+    persistent_message=False
 )
 is_sent = rmqp.sendMessage(
     message,
@@ -66,7 +69,7 @@ rmqc = RabbitMQConsumer(
         username='guest', password='guest', 
         queue_name='test_que', routing_key='test_key',
     	exchange='test_exc', exchange_type='topic',
-    	my_callback_function
+    	callback_fun=my_callback_function
 )
 rmqc.receiveMessage()
 ```
@@ -133,7 +136,8 @@ client = RPCClient(
     host='localhost', port=5672, virtual_host='/', 
     username='guest', password='guest', 
     exchange='test_exc', exchange_type='topic',
-    timeout=3 # wait 3 seconds for response. default is None (infinite wait).
+    timeout=3, # wait 3 seconds for response. default is None (infinite wait).
+    persistent_message=False
 )
 is_sent, response = client.sendMessage(
     message,
