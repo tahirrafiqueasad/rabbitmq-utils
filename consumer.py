@@ -32,7 +32,7 @@ def callback_test(ch, method, properties, body):
 
 
 class RabbitMQConsumer():
-    def __init__(self, host, port, virtual_host, username, password, queue_name, routing_key, exchange='', exchange_type='topic', callback_fun=callback_test) -> None:
+    def __init__(self, host, port, virtual_host, username, password, queue_name, routing_key, exchange='', exchange_type='topic', callback_fun=callback_test, max_priority=None) -> None:
         """Constructor."""
         self.host = host
         self.port = port
@@ -44,6 +44,7 @@ class RabbitMQConsumer():
         self.routing_key = routing_key
         self.exchange_type = exchange_type
         self.callback_fun = callback_fun
+        self.max_priority = max_priority # Message priority.
         
         # STATE VARIABLES
         self.channel = None
@@ -62,7 +63,10 @@ class RabbitMQConsumer():
         self.channel = connection.channel()
         
         # DECLARE QUEUE
-        self.channel.queue_declare(queue=self.queue_name, durable=True, exclusive=False, auto_delete=False)
+        if self.max_priority:
+            self.channel.queue_declare(queue=self.queue_name, durable=True, exclusive=False, auto_delete=False, arguments={"x-max-priority": self.max_priority})
+        else:
+            self.channel.queue_declare(queue=self.queue_name, durable=True, exclusive=False, auto_delete=False)
         
         # DECLARE EXCHANGE
         if self.exchange != '': # No delecration and binding is required for default exchange.

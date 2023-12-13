@@ -11,6 +11,8 @@ In **RabbitMQProducer** class **Publisher Confirms** is implemented, So it will 
 
 In order to make message persistent use **persistent_message=True**. This will increase the disk size as well as latency. The message will be recovered even after the rabbitmq server is restarted. 
 
+If you have priority base queue then you can pass **priority=(some int)** in **sendMessage**.
+
 ```python
 from rabbitmq_utils import RabbitMQProducer
 import json
@@ -69,7 +71,8 @@ rmqc = RabbitMQConsumer(
         username='guest', password='guest', 
         queue_name='test_que', routing_key='test_key',
     	exchange='test_exc', exchange_type='topic',
-    	callback_fun=my_callback_function
+    	callback_fun=my_callback_function,
+    	max_priority=2 # Use this if you want priority base queue. (Default it is None)
 )
 rmqc.receiveMessage()
 ```
@@ -184,10 +187,12 @@ Code is **integer**. Following table shows the meanings:
 
 ## Releases
 
-| Date      | Version | Summary                              |
-| --------- | ------- | ------------------------------------ |
-| 14-Jul-23 | v1.2.1  | Correcting documentation.            |
-| 21-Jun-23 | v1.2.0  | Adding RPC to module.                |
-| 27-Apr-23 | v1.0.1  | Improving default callback function. |
-| 27-Apr-23 | v1.0.0  | Initial build                        |
+| Date      | Version | Summary                                         |
+| --------- | ------- | ----------------------------------------------- |
+| 13-Dec-23 | v1.4.0  | Adding queue priority in producer and consumer. |
+| 14-Jul-23 | v1.3.0  | Adding persistent message option.               |
+| 14-Jul-23 | v1.2.1  | Correcting documentation.                       |
+| 21-Jun-23 | v1.2.0  | Adding RPC to module.                           |
+| 27-Apr-23 | v1.0.1  | Improving default callback function.            |
+| 27-Apr-23 | v1.0.0  | Initial build                                   |
 
