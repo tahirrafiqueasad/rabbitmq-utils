@@ -187,12 +187,13 @@ Code is **integer**. Following table shows the meanings:
 
 ## Releases
 
-| Date      | Version | Summary                                         |
-| --------- | ------- | ----------------------------------------------- |
-| 13-Dec-23 | v1.4.0  | Adding queue priority in producer and consumer. |
-| 14-Jul-23 | v1.3.0  | Adding persistent message option.               |
-| 14-Jul-23 | v1.2.1  | Correcting documentation.                       |
-| 21-Jun-23 | v1.2.0  | Adding RPC to module.                           |
-| 27-Apr-23 | v1.0.1  | Improving default callback function.            |
-| 27-Apr-23 | v1.0.0  | Initial build                                   |
+| Date      | Version | Summary                                                      |
+| --------- | ------- | ------------------------------------------------------------ |
+| 17-Jan-24 | v1.4.1  | Adding exception handling in default callback function of consumer. |
+| 13-Dec-23 | v1.4.0  | Adding queue priority in producer and consumer.              |
+| 14-Jul-23 | v1.3.0  | Adding persistent message option.                            |
+| 14-Jul-23 | v1.2.1  | Correcting documentation.                                    |
+| 21-Jun-23 | v1.2.0  | Adding RPC to module.                                        |
+| 27-Apr-23 | v1.0.1  | Improving default callback function.                         |
+| 27-Apr-23 | v1.0.0  | Initial build                                                |
 

@@ -16,11 +16,14 @@ def callback_test(ch, method, properties, body):
     print(f'INFO: Received Message: \n\n{message}\n')
     
     # PERFORM YOUR LOGIC HERE
-    import json
-    wait_sec = json.loads(message)['wait_time']
-    print(f'INFO: Wating for {wait_sec} seconds.')
-    time.sleep(wait_sec)
-    print('INFO: Done waiting.')
+    try:
+        import json
+        wait_sec = json.loads(message)['wait_time']
+        print(f'INFO: Wating for {wait_sec} seconds.')
+        time.sleep(wait_sec)
+        print('INFO: Done waiting.')
+    except:
+        pass
     
     
     # ACKNOWLEDGE WORK IS DONE
