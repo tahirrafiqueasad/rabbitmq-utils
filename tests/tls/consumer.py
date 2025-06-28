@@ -10,7 +10,7 @@ if __name__ == "__main__":
     exchange = "test_exc"
     routing_key = "test_key"
     queue_name = "test_que"
-    cafile = "certs/ca.crt"
+    cafile = "docker/certs/ca.crt"
     check_hostname = True
 
     # RECEIVING

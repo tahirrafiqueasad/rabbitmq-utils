@@ -118,5 +118,7 @@ openssl x509 -req -in management_server.csr -CA management_ca.crt -CAkey managem
 # Chaining Permissions
 
 ```bash
+cd ..
+sudo chown -R 999:999 certs/
 
 ```
