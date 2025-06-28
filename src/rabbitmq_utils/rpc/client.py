@@ -24,6 +24,8 @@ class RPCClient(RabbitMQProducer):
         exchange_type="topic",
         timeout=None,
         persistent_message=False,
+        cafile: str | None = None,
+        check_hostname: bool = True,
     ) -> None:
         super().__init__(
             host,
@@ -34,6 +36,8 @@ class RPCClient(RabbitMQProducer):
             exchange,
             exchange_type,
             persistent_message,
+            cafile,
+            check_hostname,
         )
 
         self.timeout = timeout
@@ -54,16 +58,16 @@ class RPCClient(RabbitMQProducer):
         self._code = None
         return None
 
-    def getCode(self):
+    def get_code(self):
         """Return the code."""
         return self._code
 
-    def setCode(self, code):
+    def set_code(self, code):
         """Set the code."""
         self._code = code
         return None
 
-    def getResponse(self):
+    def get_response(self):
         """Returning response."""
         return self.response
 
@@ -77,16 +81,16 @@ class RPCClient(RabbitMQProducer):
         self.connection.close()
         return None
 
-    def receiveResponse(self):
+    def receive_response(self):
         """Receiving response."""
         # GETTING RESPONSE
         self.connection.process_data_events(time_limit=self.timeout)
 
-        response = self.getResponse()
+        response = self.get_response()
         if not response:
-            self.setCode(408)  # Timeout error occur.
+            self.set_code(408)  # Timeout error occur.
         else:
-            self.setCode(200)
+            self.set_code(200)
 
         # UPDATING RESPONSE
         self.response = response
@@ -105,7 +109,7 @@ class RPCClient(RabbitMQProducer):
 
         # RECEIVING RESPONSE
         if return_response:
-            response = self.receiveResponse()
+            response = self.receive_response()
 
         # CLOSING CONNECTION
         self.close_connection()
@@ -114,28 +118,3 @@ class RPCClient(RabbitMQProducer):
         if return_response:
             return is_sent, response
         return is_sent
-
-
-if __name__ == "__main__":
-    # INFORMATION
-    host = "localhost"
-    port = 9020
-    virtual_host = "/"
-    username = "guest"
-    password = "guest"
-    exchange = "test_exc"
-    routing_key = "test_key"
-
-    # DEFINING MESSAGE
-    import json
-
-    message = json.dumps({"wait_time": 2})
-
-    # SENDING
-    client = RPCClient(
-        host, port, virtual_host, username, password, exchange, timeout=3
-    )
-    is_sent, response = client.send_message(message, routing_key, return_response=True)
-
-    # OUTPUT
-    print(f"is_sent: {is_sent} \t code: {client.getCode()} \t response: {response}")
