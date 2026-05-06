@@ -1,5 +1,5 @@
 (
-    set -e
+    # NOTE: Runs this file like source .build/upload.sh
 
     # MAKING ENVIRONMENT
     python3 -m venv .buildvenv

@@ -25,5 +25,6 @@ if __name__ == "__main__":
         exchange,
         cafile=cafile,
         check_hostname=check_hostname,
+        heartbeat=300
     )
     consumer.receive_message()

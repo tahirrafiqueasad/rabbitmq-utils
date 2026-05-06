@@ -23,7 +23,9 @@ def callback_test(ch, method, properties, body):
 
         wait_sec = json.loads(message)["wait_time"]
         print(f"INFO: Wating for {wait_sec} seconds.")
-        time.sleep(wait_sec)
+        for sec in range(wait_sec):
+            time.sleep(1)
+            print(f"Remaining Seconds: {wait_sec - sec} / {wait_sec}")
         print("INFO: Done waiting.")
     except:
         pass
@@ -52,6 +54,7 @@ class RabbitMQConsumer:
         max_priority: int | None = None,
         cafile: str | None = None,
         check_hostname: bool = True,
+        heartbeat: int = 180
     ) -> None:
         """Constructor."""
         self.host = host
@@ -67,6 +70,7 @@ class RabbitMQConsumer:
         self.max_priority = max_priority  # Message priority.
         self.cafile = cafile
         self.check_hostname = check_hostname
+        self.heartbeat= heartbeat
 
         # State Variables
         self.channel = None
@@ -93,6 +97,7 @@ class RabbitMQConsumer:
             virtual_host=self.virtual_host,
             credentials=credentials,
             ssl_options=ssl_options,
+            heartbeat=self.heartbeat
         )
         connection = pika.BlockingConnection(connection_params)
         self.channel = connection.channel()
