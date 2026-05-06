@@ -16,7 +16,7 @@ if __name__ == "__main__":
     # DEFINING MESSAGE
     import json
 
-    message = json.dumps({"wait_time": 2})
+    message = json.dumps({"wait_time": 240})
 
     # SENDING
     producer = RabbitMQProducer(
