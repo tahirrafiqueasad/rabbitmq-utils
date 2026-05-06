@@ -8,7 +8,7 @@
     pip install twine
 
     # UPLOADING
-    twine upload --repository pypi-rabbitmq-utils ./dist/*
+    twine upload --verbose --repository testpypi ./dist/*
 
     # REMOVING ENV
     deactivate

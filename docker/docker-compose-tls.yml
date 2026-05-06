@@ -1,0 +1,13 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4.1-management
+    container_name: rabbitmq_tls
+    ports:
+      - "5671:5671"  # TLS AMQP
+      - "15671:15671"  # TLS Web UI
+    volumes:
+      - ./certs:/certs:ro
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest

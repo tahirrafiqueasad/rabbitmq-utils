@@ -1,80 +1,89 @@
 # rabbitmq-utils
-This package will provide easy connection to rabbitmq server.
+
+A lightweight Python utility package to simplify working with RabbitMQ for producers, consumers, and RPC communication.
+
+## TLS Support
+
+The following classes now support optional **TLS (SSL)** parameters for secure communication over port `5671`:
+
+- `RabbitMQProducer`
+- `RabbitMQConsumer`
+- `RPCClient`
+- `RPCServer`
+
+You can enable TLS by passing the following optional parameters:
+
+```python
+cafile = "path/to/ca.crt"
+check_hostname = True
+```
+
+These should be provided **only when the RabbitMQ server is configured with TLS** (typically running on port `5671`). If not provided, connections default to non-TLS on port `5672`.
 
 ## Producer
 
-Following sample code will allow you to send the message to desire queue. 
+The `RabbitMQProducer` class allows you to send messages reliably to any RabbitMQ queue. It includes **Publisher Confirms** to ensure delivery success.
 
-In **RabbitMQProducer** class **Publisher Confirms** is implemented, So it will tell you weather the message is send to desire location or not.
+> **Note:** To use the default exchange, pass an empty string (`""`) as the exchange name. When using the default exchange, the `routing_key` should be set to the **queue name**.
 
-**Note: In order to use default exchange, use "" as exchange name. When using the default exchange then routing key will be the name of queue.**
+You can make the message **persistent** by setting `persistent_message=True`. This ensures that the message survives broker restarts at the cost of some performance.
 
-In order to make message persistent use **persistent_message=True**. This will increase the disk size as well as latency. The message will be recovered even after the rabbitmq server is restarted. 
+For priority queues, use the `priority=(some int)` argument in `send_message`.
 
-If you have priority base queue then you can pass **priority=(some int)** in **sendMessage**.
+### Example
 
 ```python
 from rabbitmq_utils import RabbitMQProducer
 import json
 
-# DEFINING MESSAGE
 message = json.dumps({'hello': 'world'})
 
-# SENDING
 rmqp = RabbitMQProducer(
     host='localhost', port=5672, virtual_host='/', 
     username='guest', password='guest', 
     exchange='test_exc', exchange_type='topic',
     persistent_message=False
 )
-is_sent = rmqp.sendMessage(
+is_sent = rmqp.send_message(
     message,
     routing_key='test_key'
 )
 
-# RESULT
 if is_sent:
     print('INFO: Message sent.')
 else:
-    print('ERROR: Unable to send on desire routing key.')
+    print('ERROR: Unable to send on desired routing key.')
 ```
 
 ## Consumer
 
-**RabbitMQConsumer** class allow you define queue, define exchange and bind queue and exchange using routing key.
+The `RabbitMQConsumer` class sets up a durable queue and exchange, binds them, and starts consuming messages using a user-defined callback function.
 
-Queue and Exchange are consider to be durable. If you are getting some error then remove the existing queue and exchange, before running this code.
+> If you receive durability-related errors, try deleting the existing queue/exchange before re-running the code.
 
-Callback function is called when message is received from the rabbitmq server. So define your callback function using following example:
+### Sample Callback Function
 
 ```python
 def my_callback_function(ch, method, properties, body):
-    # GETTING MESSAGE
     message = body.decode()
-    
-    # PERFORM YOUR LOGIC HERE
-    myLogic()
-    
-    # ACKNOWLEDGE WORK IS DONE
+    myLogic()  # your logic here
     ch.basic_ack(delivery_tag=method.delivery_tag)
-    return None
 ```
 
-Following sample code will allow you to receive message from rabbitmq server.
+### Example
 
 ```python
 from rabbitmq_utils import RabbitMQConsumer
 
-# STARTING RABBITMQ CONSUMER
 rmqc = RabbitMQConsumer(
-        host='localhost', port=5672, virtual_host='/', 
-        username='guest', password='guest', 
-        queue_name='test_que', routing_key='test_key',
-    	exchange='test_exc', exchange_type='topic',
-    	callback_fun=my_callback_function,
-    	max_priority=2 # Use this if you want priority base queue. (Default it is None)
+    host='localhost', port=5672, virtual_host='/', 
+    username='guest', password='guest', 
+    queue_name='test_que', routing_key='test_key',
+    exchange='test_exc', exchange_type='topic',
+    callback_fun=my_callback_function,
+    max_priority=2  # optional
 )
-rmqc.receiveMessage()
+rmqc.receive_message()
 ```
 
 ## Remote Procedure Call (RPC)
@@ -96,12 +105,12 @@ server = RPCServer(
     	exchange='test_exc', exchange_type='topic',
     	callback_fun=rpc_callback_function
 )
-server.receiveMessage()
+server.receive_message()
 ```
 
 Callback function of RPC is different from consumer callback function. In this callback we will return the result back to client.
 
-Note: **result** must be string. If it is not then use **json.dumps(**result**)** to convert it to string.
+Note: `result` must be string. If it is not then use `json.dumps(result)` to convert it to string.
 
 ```python
 def rpc_callback_function(ch, method, properties, body):
@@ -142,7 +151,7 @@ client = RPCClient(
     timeout=3, # wait 3 seconds for response. default is None (infinite wait).
     persistent_message=False
 )
-is_sent, response = client.sendMessage(
+is_sent, response = client.send_message(
     message,
     routing_key='test_key',
     return_response=True
@@ -152,11 +161,11 @@ is_sent, response = client.sendMessage(
 print(f'is_sent: {is_sent} \t code: {client.getCode()} \t response: {response}')
 ```
 
-Client **sendMessage** receive **return_response** argument (default=False). If this is **True** then client will wait for response for desire **timeout** period.  You can receive response later if you want by using follow sample code:
+Client **send_message** receive **return_response** argument (default=False). If this is **True** then client will wait for response for desire **timeout** period.  You can receive response later if you want by using follow sample code:
 
 ```python
 # SEND REQUEST
-is_sent = client.sendMessage(
+is_sent = client.send_message(
     message,
     routing_key
 )
@@ -164,7 +173,7 @@ is_sent = client.sendMessage(
 # PERFORM YOUR LOGIC
 
 # RECEIVE RESPONSE
-response = client.receiveResponse()
+response = client.receive_response()
 ```
 
 Always check the validity of response using status code. Following code will help you check it:
@@ -189,11 +198,12 @@ Code is **integer**. Following table shows the meanings:
 
 | Date      | Version | Summary                                                      |
 | --------- | ------- | ------------------------------------------------------------ |
-| 17-Jan-24 | v1.4.1  | Adding exception handling in default callback function of consumer. |
-| 13-Dec-23 | v1.4.0  | Adding queue priority in producer and consumer.              |
-| 14-Jul-23 | v1.3.0  | Adding persistent message option.                            |
-| 14-Jul-23 | v1.2.1  | Correcting documentation.                                    |
-| 21-Jun-23 | v1.2.0  | Adding RPC to module.                                        |
-| 27-Apr-23 | v1.0.1  | Improving default callback function.                         |
-| 27-Apr-23 | v1.0.0  | Initial build                                                |
+| 29-Jun-25 | 1.5.0  | Adding TLS support for rabbitmq running on 5671 port.         |
+| 17-Jan-24 | 1.4.1  | Adding exception handling in default callback function of consumer. |
+| 13-Dec-23 | 1.4.0  | Adding queue priority in producer and consumer.              |
+| 14-Jul-23 | 1.3.0  | Adding persistent message option.                            |
+| 14-Jul-23 | 1.2.1  | Correcting documentation.                                    |
+| 21-Jun-23 | 1.2.0  | Adding RPC to module.                                        |
+| 27-Apr-23 | 1.0.1  | Improving default callback function.                         |
+| 27-Apr-23 | 1.0.0  | Initial build                                                |
 
