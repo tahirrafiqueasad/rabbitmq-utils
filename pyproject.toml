@@ -1,6 +1,6 @@
 [project]
 name = "rabbitmq-utils"
-version = "1.5.0"
+version = "1.5.1"
 description = "Provide easy connection to RabbitMQ server."
 authors = [
     { name = "Tahir Rafique", email = "tahirrafiqueasad@gmail.com" }
