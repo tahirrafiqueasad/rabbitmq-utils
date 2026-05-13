@@ -1,3 +1,10 @@
+"""
+Author:		 Muhammad Tahir Rafique
+Date:		 2026-05-12 19:43:56
+Project:	 rabbitmq-utils
+Description: Provide function to start the rabbitmq consumer.
+"""
+
 import asyncio
 import aio_pika
 from aio_pika.abc import AbstractIncomingMessage
@@ -30,22 +37,25 @@ async def callback_test(message):
 class AsyncRabbitMQConsumer:
     def __init__(
         self,
-        host: str = "localhost",
-        port: str | int = 5672,
-        virtualhost: str = "/",
-        exchange: str = "main_exchange",
-        queue_name: str = "test_queue",
+        host: str,
+        port: str,
+        virtual_host: str,
+        username: str,
+        password: str,
+        queue_name: str,
         routing_key: str = "",
-        username: str = "guest",
-        password: str = "guest",
+        exchange: str = "",
         exchange_type: str = "topic",
         callback_fun=callback_test,
         prefetch_count: int = 1,
-        heartbeat: int = 60,
+        max_priority: int | None = None,
+        cafile: str | None = None,
+        check_hostname: bool = True,
+        heartbeat: int = 180,
     ):
         self.host = host
         self.port = port
-        self.virtualhost = virtualhost
+        self.virtual_host = virtual_host
         self.exchange = exchange
         self.queue_name = queue_name
         self.callback_fun = callback_fun
@@ -56,12 +66,14 @@ class AsyncRabbitMQConsumer:
         self.prefetch_count = prefetch_count
         self.heartbeat = heartbeat
 
+        # State variables
         self.connection = None
         self.channel = None
+        return None
 
     async def connect(self):
         """Establishes connection and sets up exchange/queue."""
-        connection_url = f"amqp://{self.username}:{self.password}@{self.host}:{self.port}/{self.virtualhost}"
+        connection_url = f"amqp://{self.username}:{self.password}@{self.host}:{self.port}/{self.virtual_host}"
 
         # Setting a heartbeat
         self.connection = await aio_pika.connect_robust(
@@ -82,23 +94,18 @@ class AsyncRabbitMQConsumer:
 
         # Bind queue to exchange
         await queue.bind(exchange, routing_key=self.routing_key)
-
         return queue
 
     async def process_message(self, message: AbstractIncomingMessage):
         """The core logic to call the external method."""
         async with message.process():
-            try:
-                data = message.body.decode()
-                await self.callback_fun(data)
-            except Exception as e:
-                print(f"Error processing message: {e}")
+            data = message.body.decode()
+            await self.callback_fun(data)
+        return None
 
     async def start_consuming(self):
         """Starts the consumer loop."""
         queue = await self.connect()
-        print(f"Waiting for messages in {self.queue_name}. To exit press CTRL+C")
-
         await queue.consume(self.process_message)
 
         # Keep the loop running

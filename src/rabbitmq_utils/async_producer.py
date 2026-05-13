@@ -1,3 +1,10 @@
+"""
+Author:		 Muhammad Tahir Rafique
+Date:		 2026-05-12 20:14:28
+Project:	 rabbitmq-utils
+Description: Provide function to send the message to rabbitmq exchange.
+"""
+
 import asyncio
 import aio_pika
 
@@ -5,21 +12,23 @@ import aio_pika
 class AsyncRabbitMQProducer:
     def __init__(
         self,
-        host="localhost",
-        port=5672,
-        virtual_host="/",
-        username="guest",
-        password="guest",
-        exchange_name="test_exc",
-        exchange_type="topic",
+        host: str,
+        port: str,
+        virtual_host: str,
+        username: str,
+        password: str,
+        exchange: str = "",
+        exchange_type: str = "topic",
         persistent_message: bool = False,
+        cafile: str | None = None,
+        check_hostname: bool = True,
     ):
         self.host = host
         self.port = port
         self.virtual_host = virtual_host
         self.username = username
         self.password = password
-        self.exchange_name = exchange_name
+        self.exchange_name = exchange
         self.exchange_type = exchange_type
 
         self.connection = None
@@ -32,12 +41,12 @@ class AsyncRabbitMQProducer:
             self.delivery_mode = aio_pika.DeliveryMode.PERSISTENT
 
         # Internal variables
-        self._is_send = None
+        self._is_sent = None
         self._exception = None
         return None
 
     def _on_message_returned(self, sender, message):
-        self._is_send = False
+        self._is_sent = False
         self._exception = Exception("Unable to route message to queue.")
         return None
 
@@ -70,6 +79,7 @@ class AsyncRabbitMQProducer:
         routing_key: str,
         close_connection: bool = True,
         confirm_wait: int = 0,
+        return_exception: bool = False,
     ):
         """Publish the message to provided routing key.
 
@@ -80,11 +90,11 @@ class AsyncRabbitMQProducer:
             confirm_wait (int, optional): ms wait to check message is delivered to queue (not recomended). Defaults to 0.
 
         Returns:
-            is_send: True if send to exchange
+            is_sent: True if send to exchange
             exc: Exception | None
         """
         try:
-            self._is_send = None
+            self._is_sent = True
             self._exception = None
             if not self.exchange:
                 await self.connect()
@@ -98,33 +108,48 @@ class AsyncRabbitMQProducer:
                 message, routing_key=routing_key, mandatory=True
             )
 
-            # Checking connection
-            if close_connection:
-                await self.close()
-
             # Waiting if requred
             if confirm_wait:
                 await asyncio.sleep(confirm_wait / 1000)
 
             # Defining variables
-            is_send = self._is_send
+            is_sent = self._is_sent
             error = self._exception
         except Exception as e:
-            is_send = False
+            is_sent = False
             error = e
-        return is_send, error
+        finally:
+            # Checking connection
+            if close_connection:
+                await self.close()
+        # If exception is required
+        if return_exception:
+            return is_sent, error
+        # Otherwise just return the status.
+        return is_sent
 
 
 # Example Usage
 async def main():
     # Defining producer class
-    producer = AsyncRabbitMQProducer()
+    producer = AsyncRabbitMQProducer(
+        host="localhost",
+        port="5672",
+        virtual_host="/",
+        username="guest",
+        password="guest",
+        exchange="test_exc",
+    )
 
     # Simulate sending a few tasks
     for i in range(5):
         data = "Ho how are you"
-        is_send, exc = await producer.publish_message(
-            data, "test_key", close_connection=False, confirm_wait=500
+        is_sent, exc = await producer.publish_message(
+            data,
+            "test_key",
+            close_connection=False,
+            confirm_wait=500,
+            return_exception=True,
         )
         await asyncio.sleep(1)  # Small delay between publishes
 
