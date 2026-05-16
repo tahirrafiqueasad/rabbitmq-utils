@@ -111,8 +111,8 @@ class RPCClient(RabbitMQProducer):
         if return_response:
             response = self.receive_response()
 
-        # CLOSING CONNECTION
-        self.close_connection()
+            # CLOSING CONNECTION
+            self.close_connection()
 
         # RETURNING RESPONSE
         if return_response:
