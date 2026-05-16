@@ -8,7 +8,7 @@ async def main():
     # Defining producer class
     producer = AsyncRabbitMQProducer(
         host="localhost",
-        port="5672",
+        port="5671",
         virtual_host="/",
         username="guest",
         password="guest",
@@ -30,6 +30,7 @@ async def main():
         print("INFO: Message sent.")
     else:
         print("ERROR: Unable to send on desire routing key.")
+        print("ERROR:", exc.reason)
 
 
 if __name__ == "__main__":

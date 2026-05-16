@@ -6,6 +6,7 @@ Description: Provide function to send the message to rabbitmq exchange.
 """
 
 import asyncio
+import ssl
 import aio_pika
 
 
@@ -30,6 +31,8 @@ class AsyncRabbitMQProducer:
         self.password = password
         self.exchange_name = exchange
         self.exchange_type = exchange_type
+        self.cafile = cafile
+        self.check_hostname = check_hostname
 
         self.connection = None
         self.channel = None
@@ -39,6 +42,12 @@ class AsyncRabbitMQProducer:
         self.delivery_mode = aio_pika.DeliveryMode.NOT_PERSISTENT
         if persistent_message:
             self.delivery_mode = aio_pika.DeliveryMode.PERSISTENT
+
+        # Defining schema
+        if cafile:
+            self.schema = "amqps"
+        else:
+            self.schema = "amqp"
 
         # Internal variables
         self._is_sent = None
@@ -52,10 +61,18 @@ class AsyncRabbitMQProducer:
 
     async def connect(self):
         """Initializes the connection and declares the exchange."""
-        connection_url = f"amqp://{self.username}:{self.password}@{self.host}:{self.port}/{self.virtual_host}"
+        connection_url = f"{self.schema}://{self.username}:{self.password}@{self.host}:{self.port}/{self.virtual_host}"
+
+        ssl_context = None
+        if self.cafile:
+            # Create a secure SSL context
+            ssl_context = ssl.create_default_context(cafile=self.cafile)
+            ssl_context.check_hostname = self.check_hostname
 
         # connect_robust handles reconnection automatically if the server blips
-        self.connection = await aio_pika.connect_robust(connection_url)
+        self.connection = await aio_pika.connect_robust(
+            connection_url, ssl_context=ssl_context
+        )
         self.channel = await self.connection.channel()
 
         # 1. Register the return callback to catch unroutable messages
