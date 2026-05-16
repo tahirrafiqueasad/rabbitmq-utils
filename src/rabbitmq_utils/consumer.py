@@ -64,7 +64,7 @@ class RabbitMQConsumer:
         self.password = password
         self.exchange = exchange
         self.queue_name = queue_name
-        self.routing_key = queue_name or routing_key
+        self.routing_key = routing_key or queue_name
         self.exchange_type = exchange_type
         self.callback_fun = callback_fun
         self.max_priority = max_priority  # Message priority.
