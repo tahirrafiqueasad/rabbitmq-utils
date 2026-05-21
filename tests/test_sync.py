@@ -4,9 +4,11 @@ Tests publish a message and verify it is consumed successfully.
 """
 
 import json
+
 import pytest
-from rabbitmq_utils.producer import RabbitMQProducer
+
 from rabbitmq_utils.consumer import RabbitMQConsumer
+from rabbitmq_utils.producer import RabbitMQProducer
 
 # Configuration
 HOST = "localhost"

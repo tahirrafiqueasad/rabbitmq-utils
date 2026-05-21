@@ -3,9 +3,11 @@ Pytest tests for blocking (sync) RabbitMQ rpc client and server.
 Tests publish a message and verify it is consumed successfully.
 """
 
-import pika
 import json
+
+import pika
 import pytest
+
 from rabbitmq_utils.rpc import RPCClient, RPCServer
 
 # Configuration
