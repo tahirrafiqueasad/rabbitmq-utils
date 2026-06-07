@@ -6,6 +6,8 @@ Description: Provide function to start the rabbitmq consumer.
 """
 
 import asyncio
+import ssl
+
 import aio_pika
 from aio_pika.abc import AbstractIncomingMessage
 
@@ -65,6 +67,14 @@ class AsyncRabbitMQConsumer:
         self.exchange_type = exchange_type
         self.prefetch_count = prefetch_count
         self.heartbeat = heartbeat
+        self.cafile = cafile
+        self.check_hostname = check_hostname
+
+        # Defining schema
+        if cafile:
+            self.schema = "amqps"
+        else:
+            self.schema = "amqp"
 
         # State variables
         self.connection = None
@@ -73,11 +83,17 @@ class AsyncRabbitMQConsumer:
 
     async def connect(self):
         """Establishes connection and sets up exchange/queue."""
-        connection_url = f"amqp://{self.username}:{self.password}@{self.host}:{self.port}/{self.virtual_host}"
+        connection_url = f"{self.schema}://{self.username}:{self.password}@{self.host}:{self.port}/{self.virtual_host}"
+
+        ssl_context = None
+        if self.cafile:
+            # Create a secure SSL context
+            ssl_context = ssl.create_default_context(cafile=self.cafile)
+            ssl_context.check_hostname = self.check_hostname
 
         # Setting a heartbeat
         self.connection = await aio_pika.connect_robust(
-            connection_url, heartbeat=self.heartbeat
+            connection_url, heartbeat=self.heartbeat, ssl_context=ssl_context
         )
         self.channel = await self.connection.channel()
 
