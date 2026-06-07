@@ -6,8 +6,8 @@ A lightweight Python utility package to simplify working with RabbitMQ for produ
 
 The following classes now support optional **TLS (SSL)** parameters for secure communication over port `5671`:
 
-- `RabbitMQProducer`
-- `RabbitMQConsumer`
+- `RabbitMQProducer`, `AsyncRabbitMQProducer`
+- `RabbitMQConsumer`, `AsyncRabbitMQConsumer`
 - `RPCClient`
 - `RPCServer`
 
@@ -55,6 +55,54 @@ else:
     print('ERROR: Unable to send on desired routing key.')
 ```
 
+## Async Producer
+
+The `AsyncRabbitMQProducer` class allows you to send messages asynchronously to RabbitMQ queues. It supports the same features as the synchronous producer but using async/await patterns.
+
+### Example
+
+```python
+import asyncio
+import json
+from rabbitmq_utils import AsyncRabbitMQProducer
+
+async def main():
+    message = json.dumps({'hello': 'world'})
+    
+    producer = AsyncRabbitMQProducer(
+        host='localhost', port=5672, virtual_host='/', 
+        username='guest', password='guest', 
+        exchange='test_exchange', exchange_type='topic',
+        persistent_message=True
+    )
+    
+    is_published, exc = await producer.publish_message(
+        message,
+        routing_key='test.routing.key',
+        close_connection=True,
+        return_exception=True
+    )
+    
+    if is_published:
+        print('Message published successfully')
+    else:
+        print(f'Failed to publish: {exc}')
+
+asyncio.run(main())
+```
+
+### With TLS
+
+```python
+producer = AsyncRabbitMQProducer(
+    host='localhost', port=5671, virtual_host='/', 
+    username='guest', password='guest', 
+    exchange='test_exchange', exchange_type='topic',
+    cafile='path/to/ca.crt',
+    check_hostname=True
+)
+```
+
 ## Consumer
 
 The `RabbitMQConsumer` class sets up a durable queue and exchange, binds them, and starts consuming messages using a user-defined callback function.
@@ -84,6 +132,58 @@ rmqc = RabbitMQConsumer(
     max_priority=2  # optional
 )
 rmqc.receive_message()
+```
+
+## Async Consumer
+
+The `AsyncRabbitMQConsumer` class provides asynchronous message consumption from RabbitMQ queues. It requires an async callback function to handle incoming messages.
+
+### Sample Async Callback Function
+
+```python
+async def my_async_callback(body: str):
+    message = json.loads(body)
+    # your async logic here
+    print(f'Received: {message}')
+```
+
+### Example
+
+```python
+import asyncio
+import json
+from rabbitmq_utils import AsyncRabbitMQConsumer
+
+async def my_async_callback(body: str):
+    message = json.loads(body)
+    print(f'Received message: {message}')
+
+async def main():
+    consumer = AsyncRabbitMQConsumer(
+        host='localhost', port=5672, virtual_host='/', 
+        username='guest', password='guest', 
+        queue_name='test_queue', routing_key='test.routing.key',
+        exchange='test_exchange', exchange_type='topic',
+        callback_fun=my_async_callback
+    )
+    
+    await consumer.start_consuming()
+
+asyncio.run(main())
+```
+
+### With TLS
+
+```python
+consumer = AsyncRabbitMQConsumer(
+    host='localhost', port=5671, virtual_host='/', 
+    username='guest', password='guest', 
+    queue_name='test_queue', routing_key='test.routing.key',
+    exchange='test_exchange', exchange_type='topic',
+    callback_fun=my_async_callback,
+    cafile='path/to/ca.crt',
+    check_hostname=True
+)
 ```
 
 ## Remote Procedure Call (RPC)
@@ -198,12 +298,13 @@ Code is **integer**. Following table shows the meanings:
 
 | Date      | Version | Summary                                                      |
 | --------- | ------- | ------------------------------------------------------------ |
-| 29-Jun-25 | 1.5.0  | Adding TLS support for rabbitmq running on 5671 port.         |
-| 17-Jan-24 | 1.4.1  | Adding exception handling in default callback function of consumer. |
-| 13-Dec-23 | 1.4.0  | Adding queue priority in producer and consumer.              |
-| 14-Jul-23 | 1.3.0  | Adding persistent message option.                            |
-| 14-Jul-23 | 1.2.1  | Correcting documentation.                                    |
-| 21-Jun-23 | 1.2.0  | Adding RPC to module.                                        |
-| 27-Apr-23 | 1.0.1  | Improving default callback function.                         |
-| 27-Apr-23 | 1.0.0  | Initial build                                                |
+| 07-Jun-26 | 1.6.0   | Adding async support for producer and consumer with TLS.     |
+| 29-Jun-25 | 1.5.0   | Adding TLS support for rabbitmq running on 5671 port.         |
+| 17-Jan-24 | 1.4.1   | Adding exception handling in default callback function of consumer. |
+| 13-Dec-23 | 1.4.0   | Adding queue priority in producer and consumer.              |
+| 14-Jul-23 | 1.3.0   | Adding persistent message option.                            |
+| 14-Jul-23 | 1.2.1   | Correcting documentation.                                    |
+| 21-Jun-23 | 1.2.0   | Adding RPC to module.                                        |
+| 27-Apr-23 | 1.0.1   | Improving default callback function.                         |
+| 27-Apr-23 | 1.0.0   | Initial build                                                |
 

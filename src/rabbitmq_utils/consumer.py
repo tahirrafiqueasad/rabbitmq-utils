@@ -47,14 +47,14 @@ class RabbitMQConsumer:
         username: str,
         password: str,
         queue_name: str,
-        routing_key: str,
+        routing_key: str = "",
         exchange: str = "",
         exchange_type: str = "topic",
         callback_fun=callback_test,
         max_priority: int | None = None,
         cafile: str | None = None,
         check_hostname: bool = True,
-        heartbeat: int = 180
+        heartbeat: int = 180,
     ) -> None:
         """Constructor."""
         self.host = host
@@ -64,13 +64,13 @@ class RabbitMQConsumer:
         self.password = password
         self.exchange = exchange
         self.queue_name = queue_name
-        self.routing_key = routing_key
+        self.routing_key = routing_key or queue_name
         self.exchange_type = exchange_type
         self.callback_fun = callback_fun
         self.max_priority = max_priority  # Message priority.
         self.cafile = cafile
         self.check_hostname = check_hostname
-        self.heartbeat= heartbeat
+        self.heartbeat = heartbeat
 
         # State Variables
         self.channel = None
@@ -97,7 +97,7 @@ class RabbitMQConsumer:
             virtual_host=self.virtual_host,
             credentials=credentials,
             ssl_options=ssl_options,
-            heartbeat=self.heartbeat
+            heartbeat=self.heartbeat,
         )
         connection = pika.BlockingConnection(connection_params)
         self.channel = connection.channel()
